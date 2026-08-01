@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { Prisma, RolNombre, type Productor } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { CooperativaContextService } from '../common/cooperativa-context.service';
 import type { AuthenticatedUser } from '../auth/types/authenticated-user';
 import type { CreateProductorDto } from './dto/create-productor.dto';
 import type { UpdateProductorDto } from './dto/update-productor.dto';
@@ -16,12 +17,15 @@ const INCLUDE_COOPERATIVA = {
 
 @Injectable()
 export class ProductoresService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly cooperativaContext: CooperativaContextService,
+  ) {}
 
   async create(dto: CreateProductorDto, user: AuthenticatedUser) {
     const cooperativaId =
       user.rol === RolNombre.COOPERATIVA
-        ? await this.resolveCooperativaId(user)
+        ? await this.cooperativaContext.resolveCooperativaId(user)
         : dto.cooperativaId;
 
     if (!cooperativaId) {
@@ -50,7 +54,8 @@ export class ProductoresService {
     }
 
     if (user.rol === RolNombre.COOPERATIVA) {
-      where.cooperativaId = await this.resolveCooperativaId(user);
+      where.cooperativaId =
+        await this.cooperativaContext.resolveCooperativaId(user);
     } else if (user.rol === RolNombre.PRODUCTOR) {
       where.usuarioId = user.id;
     }
@@ -93,20 +98,6 @@ export class ProductoresService {
     });
   }
 
-  // Resuelve el usuario COOPERATIVA autenticado (organizacionId) a su fila Cooperativa.id.
-  private async resolveCooperativaId(user: AuthenticatedUser): Promise<string> {
-    if (!user.organizacionId) {
-      throw new ForbiddenException('El usuario no tiene una organización asociada');
-    }
-    const cooperativa = await this.prisma.cooperativa.findUnique({
-      where: { organizacionId: user.organizacionId },
-    });
-    if (!cooperativa) {
-      throw new ForbiddenException('El usuario no tiene una cooperativa asociada');
-    }
-    return cooperativa.id;
-  }
-
   // "Solo propio" (C7): 404 en vez de 403 para no filtrar la existencia de
   // productores de otra cooperativa.
   private async assertAccess(productor: Productor, user: AuthenticatedUser) {
@@ -114,7 +105,8 @@ export class ProductoresService {
       return;
     }
     if (user.rol === RolNombre.COOPERATIVA) {
-      const cooperativaId = await this.resolveCooperativaId(user);
+      const cooperativaId =
+        await this.cooperativaContext.resolveCooperativaId(user);
       if (productor.cooperativaId !== cooperativaId) {
         throw new NotFoundException('Productor no encontrado');
       }

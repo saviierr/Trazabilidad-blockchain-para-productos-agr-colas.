@@ -1,29 +1,22 @@
-import { Controller, Get, Post } from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { RolNombre } from '@prisma/client';
-import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../auth/types/authenticated-user';
+import { LotesService } from './lotes.service';
 
-// Endpoints de demostración para WP-04 (guards de auth/roles). La lógica real
-// de creación y consulta de lotes (Prisma, DTOs, máquina de estados C1) se
-// implementa en WP-15.
+// POST /lotes (crear) se retiró en WP-11: el endpoint real per C5 es
+// POST /cooperativas/recepcion (ver docs/WP-11-plan-modulo-cooperativas.md §2.1).
 @ApiTags('lotes')
 @ApiBearerAuth()
 @Controller('lotes')
 export class LotesController {
-  @Post()
-  @Roles(RolNombre.COOPERATIVA)
-  @ApiOperation({ summary: 'Crear lote (C7: solo Cooperativa)' })
-  crear(@CurrentUser() user: AuthenticatedUser) {
-    return { ok: true, accion: 'crear-lote', actor: user };
-  }
+  constructor(private readonly lotesService: LotesService) {}
 
   @Get()
   @ApiOperation({
-    summary: 'Consultar historial de lotes (cualquier rol autenticado)',
+    summary: 'Consultar lotes (alcance "solo propio" para Cooperativa/Productor)',
   })
-  listar(@CurrentUser() user: AuthenticatedUser) {
-    return { ok: true, accion: 'listar-lotes', actor: user };
+  findAll(@CurrentUser() user: AuthenticatedUser) {
+    return this.lotesService.findAll(user);
   }
 }

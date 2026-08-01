@@ -208,7 +208,9 @@ model Lote {
   fechaCosecha     DateTime
   fechaTransporte  DateTime?
   fechaExportacion DateTime?
+  fechaSecado      DateTime?
   pesoInicialKg    Decimal?   @db.Decimal(10, 2)
+  pesoFermentadoKg Decimal?   @db.Decimal(10, 2) // peso post-fermentación/secado (C4.RegisterFermentation), distinto de pesoInicialKg
 
   hashCertificado        String? // espejo de C2.hashCertificado una vez emitido
   ultimaTxHashBlockchain String? // referencia a la última transacción confirmada en el ledger
@@ -237,8 +239,10 @@ model Evento {
   actorOrganizacion   Organizacion? @relation(fields: [actorOrganizacionId], references: [id])
 
   datosEspecificos          Json? // payload propio del tipo de evento (peso, ruta, tiempos, etc.)
-  hashTransaccionBlockchain String // referencia obligatoria a la tx on-chain que originó el evento
-  firmaDigital              String // espejo de C2.firmaDigital: firma criptográfica del actor que registra esta transacción
+  // Nullable: hasta WP-22 (Fabric Gateway) los eventos de Sprint 1 se registran sin
+  // transacción on-chain todavía (Desarrollo.md: "Todavía no se utilizará blockchain").
+  hashTransaccionBlockchain String? // referencia a la tx on-chain que originó el evento, una vez exista
+  firmaDigital              String? // espejo de C2.firmaDigital: firma criptográfica del actor que registra esta transacción
 
   timestamp DateTime @default(now())
 

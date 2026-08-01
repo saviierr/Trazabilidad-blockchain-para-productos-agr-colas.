@@ -101,12 +101,17 @@ describe('Auth y roles (e2e)', () => {
       expect(res.status).toBe(200);
     });
 
-    it('POST /lotes sin token devuelve 401', async () => {
-      const res = await request(app.getHttpServer()).post('/lotes');
+    it('POST /cooperativas/recepcion sin token devuelve 401', async () => {
+      const res = await request(app.getHttpServer()).post(
+        '/cooperativas/recepcion',
+      );
       expect(res.status).toBe(401);
     });
   });
 
+  // "Crear lote" (POST /cooperativas/recepcion) y "Registrar fermentación/secado"
+  // (POST /cooperativas/fermentacion) ya no son placeholders sin cuerpo desde WP-11
+  // — su matriz de permisos + flujo real se prueba en test/cooperativas.e2e-spec.ts.
   describe('Matriz de permisos C7 — un solo rol por acción', () => {
     const casos: {
       metodo: 'post';
@@ -114,13 +119,6 @@ describe('Auth y roles (e2e)', () => {
       rolPermitido: keyof typeof CREDENCIALES;
       accion: string;
     }[] = [
-      { metodo: 'post', ruta: '/lotes', rolPermitido: 'COOPERATIVA', accion: 'crear-lote' },
-      {
-        metodo: 'post',
-        ruta: '/cooperativas/fermentacion',
-        rolPermitido: 'COOPERATIVA',
-        accion: 'registrar-fermentacion',
-      },
       {
         metodo: 'post',
         ruta: '/certificados',

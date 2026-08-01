@@ -1,8 +1,9 @@
 import { Module } from '@nestjs/common';
 import { CooperativasController } from './cooperativas.controller';
+import { CooperativasService } from './cooperativas.service';
 
-// Guards de rol en WP-04. Lógica de recepción/fermentación/secado en WP-11.
 @Module({
   controllers: [CooperativasController],
+  providers: [CooperativasService],
 })
 export class CooperativasModule {}

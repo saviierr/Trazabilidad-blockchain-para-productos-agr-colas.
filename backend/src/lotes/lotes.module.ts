@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
 import { LotesController } from './lotes.controller';
+import { LotesService } from './lotes.service';
 
-// Guards de rol en WP-04. Máquina de estados C1 y lógica real en WP-15.
+// Máquina de estados C1 completa y GET /lotes/:id/historial en WP-15.
 @Module({
   controllers: [LotesController],
+  providers: [LotesService],
 })
 export class LotesModule {}

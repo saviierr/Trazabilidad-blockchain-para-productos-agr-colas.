@@ -88,7 +88,9 @@ erDiagram
         datetime fechaCosecha
         datetime fechaTransporte "nullable"
         datetime fechaExportacion "nullable"
+        datetime fechaSecado "nullable, WP-11"
         decimal pesoInicialKg "nullable"
+        decimal pesoFermentadoKg "nullable, post-fermentación/secado, WP-11"
         string hashCertificado "nullable, espejo de C2"
         string ultimaTxHashBlockchain "nullable, proyección de lectura"
         datetime createdAt
@@ -102,8 +104,8 @@ erDiagram
         string actorUsuarioId FK
         string actorOrganizacionId FK "nullable"
         json datosEspecificos "nullable, payload propio del tipo de evento"
-        string hashTransaccionBlockchain "referencia a la tx on-chain"
-        string firmaDigital "espejo de C2.firmaDigital, firma del actor"
+        string hashTransaccionBlockchain "nullable hasta WP-22, ver §4"
+        string firmaDigital "nullable hasta WP-22, ver §4"
         datetime timestamp
     }
 
@@ -215,9 +217,9 @@ erDiagram
 | Campo (Postgres) | Entidad | Ubicación | Justificación |
 |---|---|---|---|
 | `id` (loteId), `estado`, `fechaCosecha`, `fechaTransporte`, `fechaExportacion`, `hashCertificado` | Lote | **Espejo de on-chain (C2)** | Postgres necesita estos campos para búsquedas/joins/dashboard (WP-16); Fabric no ofrece consultas SQL. Fuente de verdad = ledger; Postgres es proyección sincronizada vía Fabric Gateway (WP-22). |
-| `firmaDigital` | Evento | **Espejo de on-chain (C2.firmaDigital)** | C2 exige la firma criptográfica del actor que registra; se modela por evento (no por lote) porque cada transacción de C4 trae su propia firma (ver `RegisterCertification(..., firmaCertificadora)`). |
-| `capacidadProductivaMaximaKg` | Productor | **Off-chain, fuente de verdad** | Dato administrativo de la finca. **Nota de diseño abierta (WP-21):** la regla de negocio "RegisterFermentation rechaza si peso > capacidad máxima" (C4) necesita que el chaincode conozca este valor; el mecanismo exacto (ampliar `CreateLot` con un parámetro nuevo, o una transacción de alta de finca separada) no está definido todavía y se decide en Sprint 2 — no se asume aquí una modificación a la firma congelada de `CreateLot` sin registrarla. |
-| `hashTransaccionBlockchain` | Evento, Lote, Exportación | **Referencia, no duplicado** | Puntero al `txId`/bloque de Fabric; permite auditar/verificar sin repetir el contenido de la transacción. |
+| `firmaDigital` | Evento | **Espejo de on-chain (C2.firmaDigital), nullable hasta WP-22** | C2 exige la firma criptográfica del actor que registra; se modela por evento (no por lote) porque cada transacción de C4 trae su propia firma (ver `RegisterCertification(..., firmaCertificadora)`). Nullable porque Sprint 1 (WP-11 en adelante) registra eventos sin blockchain todavía (`Desarrollo.md`: "Todavía no se utilizará blockchain"); WP-22 (Fabric Gateway) completa el valor real cuando cada acción se somete a Fabric. |
+| `capacidadProductivaMaximaKg` | Productor | **Off-chain, fuente de verdad** | Dato administrativo de la finca. La validación de negocio "peso ≤ capacidad máxima" (C4) ya se implementa en la API desde WP-11 (Postgres→Postgres, sin duplicación). **Nota de diseño abierta (WP-21):** cómo el *chaincode* hará esa misma validación on-chain sin duplicar el dato sigue sin definirse — no se asume aquí una modificación a la firma congelada de `CreateLot` sin registrarla. |
+| `hashTransaccionBlockchain` | Evento, Lote, Exportación | **Referencia, no duplicado; nullable en Evento hasta WP-22** | Puntero al `txId`/bloque de Fabric; permite auditar/verificar sin repetir el contenido de la transacción. En `Evento` es nullable por el mismo motivo que `firmaDigital` (ver fila anterior). |
 | `hashArchivo` | Certificado | **Espejo de `hashCertificado` (C2)** | El hash SHA-256 vive en ambos lados por diseño (C2/C3): on-chain para integridad verificable, off-chain junto al archivo real para poder recalcularlo y compararlo. |
 | `datosEspecificos` (JSON) | Evento | **Off-chain únicamente** | Detalle operativo (peso, ruta, tiempos) que no necesita vivir on-chain; on-chain solo requiere el evento resumido (`actor`, `timestamp`, `tipo` — C2.`historialEventos`). |
 | `cedula`, `telefono`, `direccion` | Productor | **Off-chain, nunca on-chain** | Prohibido explícitamente por Fase II §6. |
