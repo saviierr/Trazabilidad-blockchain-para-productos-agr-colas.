@@ -181,6 +181,7 @@ model Productor {
   cedula        String      @unique // off-chain, nunca se publica (Fase II §6)
   telefono      String?
   direccion     String?
+  activo        Boolean     @default(true) // eliminación lógica (WP-10)
 
   // Fuente de verdad off-chain. Cómo el chaincode valida RegisterFermentation (C4)
   // contra este límite sin duplicarlo on-chain es una decisión abierta para WP-21

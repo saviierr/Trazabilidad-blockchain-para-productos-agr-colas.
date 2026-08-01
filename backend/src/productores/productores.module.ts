@@ -1,5 +1,9 @@
 import { Module } from '@nestjs/common';
+import { ProductoresController } from './productores.controller';
+import { ProductoresService } from './productores.service';
 
-// Estructura base (WP-02). CRUD real en WP-10.
-@Module({})
+@Module({
+  controllers: [ProductoresController],
+  providers: [ProductoresService],
+})
 export class ProductoresModule {}

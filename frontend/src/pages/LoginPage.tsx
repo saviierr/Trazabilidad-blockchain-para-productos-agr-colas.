@@ -1,5 +1,6 @@
 import { type FormEvent, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { isAxiosError } from 'axios'
 import { Sprout } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -11,16 +12,32 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { useAuth } from '@/lib/auth-context'
 
 export function LoginPage() {
   const navigate = useNavigate()
+  const { login } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
 
-  // Placeholder: la autenticación real (JWT contra el backend) se implementa en WP-04.
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    navigate('/dashboard')
+    setError(null)
+    setLoading(true)
+    try {
+      await login(email, password)
+      navigate('/dashboard')
+    } catch (err) {
+      if (isAxiosError(err) && err.response?.status === 401) {
+        setError('Correo o contraseña incorrectos.')
+      } else {
+        setError('No se pudo iniciar sesión. Intenta de nuevo.')
+      }
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -66,8 +83,9 @@ export function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
-              <Button type="submit" className="mt-2 w-full">
-                Ingresar
+              {error && <p className="text-sm text-destructive">{error}</p>}
+              <Button type="submit" className="mt-2 w-full" disabled={loading}>
+                {loading ? 'Ingresando…' : 'Ingresar'}
               </Button>
             </form>
           </CardContent>

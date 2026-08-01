@@ -75,6 +75,7 @@ erDiagram
         string cedula UK "off-chain, nunca publicado"
         string telefono
         string direccion
+        boolean activo "eliminación lógica, WP-10"
         decimal capacidadProductivaMaximaKg
         datetime createdAt
     }
@@ -172,7 +173,7 @@ erDiagram
 | **Roles** | Catálogo de roles del sistema, base de la matriz de permisos C7. |
 | **Usuarios** | Cuentas de acceso (login/JWT), un rol y opcionalmente una organización. |
 | **Organizaciones** | Tabla padre de todo actor institucional (cooperativa, certificadora, transportista, exportador); referencia el `mspId` de Fabric para los actores que son organizaciones validadoras de la red (WP-20). |
-| **Productores** | Persona/finca afiliada a una cooperativa; dueña de los lotes. |
+| **Productores** | Persona/finca afiliada a una cooperativa; dueña de los lotes. Soporta eliminación lógica (`activo`, WP-10). |
 | **Cooperativas** | Especialización de Organización; recibe cosecha, registra fermentación/secado, crea lotes. |
 | **Certificadoras** | Especialización de Organización; emite certificados de calidad/orgánico. |
 | **Transportistas** | Especialización de Organización; ejecuta el transporte del lote. |

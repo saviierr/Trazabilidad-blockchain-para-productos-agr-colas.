@@ -12,17 +12,19 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { navItems } from '@/lib/nav-items'
+import { useAuth } from '@/lib/auth-context'
 
 export function AppNavbar() {
   const location = useLocation()
   const navigate = useNavigate()
+  const { user, logout } = useAuth()
 
   const currentTitle =
     navItems.find((item) => location.pathname.startsWith(item.url))?.title ??
     'Trazabilidad Cacao'
 
-  // Placeholder: la sesión real (JWT, usuario autenticado) se conecta en WP-04.
   function handleLogout() {
+    logout()
     navigate('/login')
   }
 
@@ -42,7 +44,9 @@ export function AppNavbar() {
             </Avatar>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Mi cuenta</DropdownMenuLabel>
+            <DropdownMenuLabel>
+              {user?.email ?? 'Mi cuenta'}
+            </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout}>
               <LogOut />

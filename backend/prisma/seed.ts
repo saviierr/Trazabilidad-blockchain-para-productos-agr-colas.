@@ -1,11 +1,8 @@
 /**
- * DATOS DE PRUEBA — no representan actores reales del sistema (regla dura #1
- * del plan maestro). Un usuario de prueba por cada rol de la matriz C7, con
- * contraseñas conocidas para poder probar login y guards en WP-04.
- *
  *   admin@test.com          Admin123!
  *   productor@test.com      Productor123!
  *   cooperativa@test.com    Cooperativa123!
+ *   cooperativa2@test.com   Cooperativa2123!   
  *   certificadora@test.com  Certificadora123!
  *   transportista@test.com  Transportista123!
  *   exportador@test.com     Exportador123!
@@ -53,6 +50,22 @@ async function main() {
     where: { organizacionId: cooperativaOrg.id },
     update: {},
     create: { organizacionId: cooperativaOrg.id, ubicacion: 'Los Ríos, Ecuador' },
+  });
+
+  const cooperativa2Org = await prisma.organizacion.upsert({
+    where: { mspId: 'cooperativa2-demo-msp' },
+    update: {},
+    create: {
+      nombre: 'Cooperativa Demo 2',
+      tipo: TipoOrganizacion.COOPERATIVA,
+      mspId: 'cooperativa2-demo-msp',
+      esValidadorRed: true,
+    },
+  });
+  await prisma.cooperativa.upsert({
+    where: { organizacionId: cooperativa2Org.id },
+    update: {},
+    create: { organizacionId: cooperativa2Org.id, ubicacion: 'Manabí, Ecuador' },
   });
 
   const certificadoraOrg = await prisma.organizacion.upsert({
@@ -110,53 +123,60 @@ async function main() {
     rol: RolNombre;
     organizacionId?: string;
   }[] = [
-    {
-      email: 'admin@test.com',
-      password: 'Admin123!',
-      nombre: 'Admin de prueba',
-      rol: RolNombre.ADMIN,
-    },
-    {
-      email: 'productor@test.com',
-      password: 'Productor123!',
-      nombre: 'Productor de prueba',
-      rol: RolNombre.PRODUCTOR,
-    },
-    {
-      email: 'cooperativa@test.com',
-      password: 'Cooperativa123!',
-      nombre: 'Cooperativa de prueba',
-      rol: RolNombre.COOPERATIVA,
-      organizacionId: cooperativaOrg.id,
-    },
-    {
-      email: 'certificadora@test.com',
-      password: 'Certificadora123!',
-      nombre: 'Certificadora de prueba',
-      rol: RolNombre.CERTIFICADORA,
-      organizacionId: certificadoraOrg.id,
-    },
-    {
-      email: 'transportista@test.com',
-      password: 'Transportista123!',
-      nombre: 'Transportista de prueba',
-      rol: RolNombre.TRANSPORTISTA,
-      organizacionId: transportistaOrg.id,
-    },
-    {
-      email: 'exportador@test.com',
-      password: 'Exportador123!',
-      nombre: 'Exportador de prueba',
-      rol: RolNombre.EXPORTADOR,
-      organizacionId: exportadorOrg.id,
-    },
-    {
-      email: 'comprador@test.com',
-      password: 'Comprador123!',
-      nombre: 'Comprador de prueba',
-      rol: RolNombre.COMPRADOR,
-    },
-  ];
+      {
+        email: 'admin@test.com',
+        password: 'Admin123!',
+        nombre: 'Admin de prueba',
+        rol: RolNombre.ADMIN,
+      },
+      {
+        email: 'productor@test.com',
+        password: 'Productor123!',
+        nombre: 'Productor de prueba',
+        rol: RolNombre.PRODUCTOR,
+      },
+      {
+        email: 'cooperativa@test.com',
+        password: 'Cooperativa123!',
+        nombre: 'Cooperativa de prueba',
+        rol: RolNombre.COOPERATIVA,
+        organizacionId: cooperativaOrg.id,
+      },
+      {
+        email: 'cooperativa2@test.com',
+        password: 'Cooperativa2123!',
+        nombre: 'Cooperativa 2 de prueba',
+        rol: RolNombre.COOPERATIVA,
+        organizacionId: cooperativa2Org.id,
+      },
+      {
+        email: 'certificadora@test.com',
+        password: 'Certificadora123!',
+        nombre: 'Certificadora de prueba',
+        rol: RolNombre.CERTIFICADORA,
+        organizacionId: certificadoraOrg.id,
+      },
+      {
+        email: 'transportista@test.com',
+        password: 'Transportista123!',
+        nombre: 'Transportista de prueba',
+        rol: RolNombre.TRANSPORTISTA,
+        organizacionId: transportistaOrg.id,
+      },
+      {
+        email: 'exportador@test.com',
+        password: 'Exportador123!',
+        nombre: 'Exportador de prueba',
+        rol: RolNombre.EXPORTADOR,
+        organizacionId: exportadorOrg.id,
+      },
+      {
+        email: 'comprador@test.com',
+        password: 'Comprador123!',
+        nombre: 'Comprador de prueba',
+        rol: RolNombre.COMPRADOR,
+      },
+    ];
 
   for (const u of usuarios) {
     const rol = await prisma.rol.findUniqueOrThrow({ where: { nombre: u.rol } });
