@@ -1,0 +1,31 @@
+import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { PrismaModule } from './prisma/prisma.module';
+import { HealthModule } from './health/health.module';
+import { AuthModule } from './auth/auth.module';
+import { ProductoresModule } from './productores/productores.module';
+import { CooperativasModule } from './cooperativas/cooperativas.module';
+import { CertificadorasModule } from './certificadoras/certificadoras.module';
+import { TransportistasModule } from './transportistas/transportistas.module';
+import { ExportacionesModule } from './exportaciones/exportaciones.module';
+import { LotesModule } from './lotes/lotes.module';
+
+@Module({
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    PrismaModule,
+    HealthModule,
+    AuthModule,
+    ProductoresModule,
+    CooperativasModule,
+    CertificadorasModule,
+    TransportistasModule,
+    ExportacionesModule,
+    LotesModule,
+  ],
+  controllers: [AppController],
+  providers: [AppService],
+})
+export class AppModule {}
