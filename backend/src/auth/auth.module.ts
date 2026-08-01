@@ -1,10 +1,14 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { JwtModule, JwtModuleOptions } from '@nestjs/jwt';
+import { JwtModule, type JwtModuleOptions } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
+import { AuthController } from './auth.controller';
+import { AuthService } from './auth.service';
+import { JwtStrategy } from './strategies/jwt.strategy';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { RolesGuard } from './guards/roles.guard';
 
-// Solo configuración (WP-02). Guards, estrategias y lógica de login/roles
-// se implementan en WP-04 sobre la matriz de permisos C7.
 @Module({
   imports: [
     PassportModule,
@@ -15,10 +19,20 @@ import { PassportModule } from '@nestjs/passport';
         ({
           secret: config.get<string>('JWT_SECRET'),
           signOptions: {
-            expiresIn: config.get<string>('JWT_EXPIRES_IN', '1d'),
+            expiresIn: config.get<string>('JWT_EXPIRES_IN', '15m'),
           },
         }) as JwtModuleOptions,
     }),
+  ],
+  controllers: [AuthController],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    // Guards globales: por defecto todo endpoint requiere JWT + rol permitido,
+    // salvo @Public(). Así ningún endpoint nuevo de Sprint 1 queda protegido
+    // solo "por accidente".
+    { provide: APP_GUARD, useClass: JwtAuthGuard },
+    { provide: APP_GUARD, useClass: RolesGuard },
   ],
 })
 export class AuthModule {}

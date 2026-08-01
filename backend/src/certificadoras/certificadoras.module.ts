@@ -1,5 +1,8 @@
 import { Module } from '@nestjs/common';
+import { CertificadorasController } from './certificadoras.controller';
 
-// Estructura base (WP-02). Registro/validación de certificados en WP-12.
-@Module({})
+// Guards de rol en WP-04. Registro/validación de certificados en WP-12.
+@Module({
+  controllers: [CertificadorasController],
+})
 export class CertificadorasModule {}
