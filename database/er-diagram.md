@@ -88,7 +88,6 @@ erDiagram
         datetime fechaTransporte "nullable"
         datetime fechaExportacion "nullable"
         decimal pesoInicialKg "nullable"
-        decimal capacidadEstimadaSnapshotKg "duplicado justificado, ver §4"
         string hashCertificado "nullable, espejo de C2"
         string ultimaTxHashBlockchain "nullable, proyección de lectura"
         datetime createdAt
@@ -103,6 +102,7 @@ erDiagram
         string actorOrganizacionId FK "nullable"
         json datosEspecificos "nullable, payload propio del tipo de evento"
         string hashTransaccionBlockchain "referencia a la tx on-chain"
+        string firmaDigital "espejo de C2.firmaDigital, firma del actor"
         datetime timestamp
     }
 
@@ -214,8 +214,8 @@ erDiagram
 | Campo (Postgres) | Entidad | Ubicación | Justificación |
 |---|---|---|---|
 | `id` (loteId), `estado`, `fechaCosecha`, `fechaTransporte`, `fechaExportacion`, `hashCertificado` | Lote | **Espejo de on-chain (C2)** | Postgres necesita estos campos para búsquedas/joins/dashboard (WP-16); Fabric no ofrece consultas SQL. Fuente de verdad = ledger; Postgres es proyección sincronizada vía Fabric Gateway (WP-22). |
-| `capacidadEstimadaSnapshotKg` | Lote | **Duplicado deliberado** | Se envía como parámetro a `CreateLot` (C4) y queda embebido en el registro on-chain para que el chaincode valide `RegisterFermentation` (regla de peso máximo) sin depender de una consulta externa a Postgres durante el consenso. |
-| `capacidadProductivaMaximaKg` | Productor | **Off-chain, fuente de verdad** | Dato administrativo de la finca; solo su snapshot viaja on-chain (ver fila anterior). |
+| `firmaDigital` | Evento | **Espejo de on-chain (C2.firmaDigital)** | C2 exige la firma criptográfica del actor que registra; se modela por evento (no por lote) porque cada transacción de C4 trae su propia firma (ver `RegisterCertification(..., firmaCertificadora)`). |
+| `capacidadProductivaMaximaKg` | Productor | **Off-chain, fuente de verdad** | Dato administrativo de la finca. **Nota de diseño abierta (WP-21):** la regla de negocio "RegisterFermentation rechaza si peso > capacidad máxima" (C4) necesita que el chaincode conozca este valor; el mecanismo exacto (ampliar `CreateLot` con un parámetro nuevo, o una transacción de alta de finca separada) no está definido todavía y se decide en Sprint 2 — no se asume aquí una modificación a la firma congelada de `CreateLot` sin registrarla. |
 | `hashTransaccionBlockchain` | Evento, Lote, Exportación | **Referencia, no duplicado** | Puntero al `txId`/bloque de Fabric; permite auditar/verificar sin repetir el contenido de la transacción. |
 | `hashArchivo` | Certificado | **Espejo de `hashCertificado` (C2)** | El hash SHA-256 vive en ambos lados por diseño (C2/C3): on-chain para integridad verificable, off-chain junto al archivo real para poder recalcularlo y compararlo. |
 | `datosEspecificos` (JSON) | Evento | **Off-chain únicamente** | Detalle operativo (peso, ruta, tiempos) que no necesita vivir on-chain; on-chain solo requiere el evento resumido (`actor`, `timestamp`, `tipo` — C2.`historialEventos`). |
@@ -227,10 +227,11 @@ erDiagram
 
 ### 4.2 Regla de "no duplicidad innecesaria"
 
-Solo existen dos duplicaciones de valor entre Postgres y blockchain, y ambas están justificadas arriba:
+Solo existe una duplicación de valor entre Postgres y blockchain, y está justificada arriba:
 
-1. **Lote como proyección de lectura** del estado on-chain (necesaria por limitaciones de consulta de Fabric).
-2. **`capacidadEstimadaSnapshotKg`** embebido on-chain (necesario para que el chaincode valide sin dependencias externas — mitigación ya definida en Fase I).
+1. **Lote y Evento como proyección de lectura** del estado y del historial on-chain (necesaria por limitaciones de consulta de Fabric), incluyendo el espejo de `firmaDigital` por evento.
+
+La capacidad productiva máxima de la finca (`capacidadProductivaMaximaKg`) vive únicamente off-chain en `Productor`; cómo el chaincode la valida en `RegisterFermentation` sin duplicarla on-chain queda como decisión abierta para WP-21 (ver fila correspondiente en §4.1), en vez de asumir aquí un cambio no registrado a la firma congelada de `CreateLot`.
 
 Todo lo demás (datos personales, documentos, credenciales, metadatos regulatorios) vive exclusivamente en un solo lado, según C2/C3.
 

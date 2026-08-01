@@ -182,8 +182,9 @@ model Productor {
   telefono      String?
   direccion     String?
 
-  // Fuente de verdad off-chain; su snapshot viaja a CreateLot (C4) para que el
-  // chaincode valide RegisterFermentation sin depender de una consulta externa.
+  // Fuente de verdad off-chain. Cómo el chaincode valida RegisterFermentation (C4)
+  // contra este límite sin duplicarlo on-chain es una decisión abierta para WP-21
+  // (ver database/er-diagram.md §4.1) — no se asume aquí un cambio a CreateLot.
   capacidadProductivaMaximaKg Decimal @db.Decimal(10, 2)
 
   createdAt DateTime @default(now())
@@ -207,9 +208,6 @@ model Lote {
   fechaTransporte  DateTime?
   fechaExportacion DateTime?
   pesoInicialKg    Decimal?   @db.Decimal(10, 2)
-
-  // Duplicado deliberado: snapshot enviado a CreateLot y embebido on-chain (ver er-diagram.md §4).
-  capacidadEstimadaSnapshotKg Decimal @db.Decimal(10, 2)
 
   hashCertificado        String? // espejo de C2.hashCertificado una vez emitido
   ultimaTxHashBlockchain String? // referencia a la última transacción confirmada en el ledger
@@ -239,6 +237,7 @@ model Evento {
 
   datosEspecificos          Json? // payload propio del tipo de evento (peso, ruta, tiempos, etc.)
   hashTransaccionBlockchain String // referencia obligatoria a la tx on-chain que originó el evento
+  firmaDigital              String // espejo de C2.firmaDigital: firma criptográfica del actor que registra esta transacción
 
   timestamp DateTime @default(now())
 
