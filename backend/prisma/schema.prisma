@@ -327,6 +327,7 @@ model Exportacion {
 
   empresaCompradora         String
   paisDestino               String
+  puertoSalida              String // WP-14: no estaba en C4/WP-01, lo exige el DoD del módulo
   fechaExportacion          DateTime
   numeroDocumentoAduanero   String?
   hashTransaccionBlockchain String?

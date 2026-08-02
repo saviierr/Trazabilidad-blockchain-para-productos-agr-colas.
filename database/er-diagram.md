@@ -149,6 +149,7 @@ erDiagram
         string exportadorId FK
         string empresaCompradora
         string paisDestino
+        string puertoSalida "WP-14, no estaba en C4"
         datetime fechaExportacion
         string numeroDocumentoAduanero "nullable, off-chain"
         string hashTransaccionBlockchain "nullable"

@@ -8,6 +8,7 @@
  *   transportista@test.com  Transportista123!
  *   transportista2@test.com Transportista2123!  (segunda transportista, para probar aislamiento "solo propio" en WP-13)
  *   exportador@test.com     Exportador123!
+ *   exportador2@test.com    Exportador2123!     (segunda exportadora, para probar aislamiento "solo propio" en WP-14)
  *   comprador@test.com      Comprador123!
  */
 import { PrismaClient, RolNombre, TipoOrganizacion } from '@prisma/client';
@@ -150,6 +151,22 @@ async function main() {
     create: { organizacionId: exportadorOrg.id },
   });
 
+  const exportador2Org = await prisma.organizacion.upsert({
+    where: { mspId: 'exportador2-demo-msp' },
+    update: {},
+    create: {
+      nombre: 'Exportador Demo 2',
+      tipo: TipoOrganizacion.EXPORTADOR,
+      mspId: 'exportador2-demo-msp',
+      esValidadorRed: true,
+    },
+  });
+  await prisma.exportador.upsert({
+    where: { organizacionId: exportador2Org.id },
+    update: {},
+    create: { organizacionId: exportador2Org.id },
+  });
+
   const usuarios: {
     email: string;
     password: string;
@@ -217,6 +234,13 @@ async function main() {
         nombre: 'Exportador de prueba',
         rol: RolNombre.EXPORTADOR,
         organizacionId: exportadorOrg.id,
+      },
+      {
+        email: 'exportador2@test.com',
+        password: 'Exportador2123!',
+        nombre: 'Exportador 2 de prueba',
+        rol: RolNombre.EXPORTADOR,
+        organizacionId: exportador2Org.id,
       },
       {
         email: 'comprador@test.com',

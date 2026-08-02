@@ -109,50 +109,12 @@ describe('Auth y roles (e2e)', () => {
     });
   });
 
-  // "Crear lote" (POST /cooperativas/recepcion), "Registrar fermentación/secado"
-  // (POST /cooperativas/fermentacion, WP-11), "Emitir certificado" (POST
-  // /certificados, WP-12) y "Registrar transporte" (POST /transporte, WP-13) ya
-  // no son placeholders sin cuerpo — su matriz de permisos + flujo real se
-  // prueba en cooperativas.e2e-spec.ts, certificadoras.e2e-spec.ts y
-  // transportistas.e2e-spec.ts respectivamente.
-  describe('Matriz de permisos C7 — un solo rol por acción', () => {
-    const casos: {
-      metodo: 'post';
-      ruta: string;
-      rolPermitido: keyof typeof CREDENCIALES;
-      accion: string;
-    }[] = [
-      {
-        metodo: 'post',
-        ruta: '/exportaciones',
-        rolPermitido: 'EXPORTADOR',
-        accion: 'registrar-exportacion',
-      },
-    ];
-
-    for (const caso of casos) {
-      it(`${caso.ruta}: el rol permitido (${caso.rolPermitido}) accede`, async () => {
-        const token = await login(caso.rolPermitido);
-        const res = await request(app.getHttpServer())
-          [caso.metodo](caso.ruta)
-          .set('Authorization', `Bearer ${token}`);
-        expect(res.status).toBe(201);
-        expect(res.body.accion).toBe(caso.accion);
-      });
-
-      it(`${caso.ruta}: un rol distinto (${
-        caso.rolPermitido === 'COOPERATIVA' ? 'TRANSPORTISTA' : 'COOPERATIVA'
-      }) es rechazado con 403`, async () => {
-        const rolIncorrecto =
-          caso.rolPermitido === 'COOPERATIVA' ? 'TRANSPORTISTA' : 'COOPERATIVA';
-        const token = await login(rolIncorrecto);
-        const res = await request(app.getHttpServer())
-          [caso.metodo](caso.ruta)
-          .set('Authorization', `Bearer ${token}`);
-        expect(res.status).toBe(403);
-      });
-    }
-
+  // Las 5 acciones de un-solo-rol de C7 (crear lote, fermentación, certificado,
+  // transporte, exportación) ya no son placeholders sin cuerpo — su matriz de
+  // permisos + flujo real se prueba en cooperativas.e2e-spec.ts,
+  // certificadoras.e2e-spec.ts, transportistas.e2e-spec.ts y
+  // exportaciones.e2e-spec.ts respectivamente.
+  describe('Matriz de permisos C7', () => {
     it('GET /lotes: cualquier rol autenticado accede (sin @Roles)', async () => {
       const token = await login('COMPRADOR');
       const res = await request(app.getHttpServer())

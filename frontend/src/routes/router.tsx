@@ -9,6 +9,7 @@ import { ProductoresPage } from '@/features/productores/ProductoresPage'
 import { LotesPage } from '@/features/lotes/LotesPage'
 import { CertificadosPage } from '@/features/certificados/CertificadosPage'
 import { TransportesPage } from '@/features/transportes/TransportesPage'
+import { ExportacionesPage } from '@/features/exportaciones/ExportacionesPage'
 import { navItems } from '@/lib/nav-items'
 
 const RUTAS_IMPLEMENTADAS = [
@@ -17,6 +18,7 @@ const RUTAS_IMPLEMENTADAS = [
   '/lotes',
   '/certificadoras',
   '/transportistas',
+  '/exportaciones',
 ]
 
 export const router = createBrowserRouter([
@@ -33,6 +35,7 @@ export const router = createBrowserRouter([
           { path: '/lotes', element: <LotesPage /> },
           { path: '/certificadoras', element: <CertificadosPage /> },
           { path: '/transportistas', element: <TransportesPage /> },
+          { path: '/exportaciones', element: <ExportacionesPage /> },
           ...navItems
             .filter((item) => !RUTAS_IMPLEMENTADAS.includes(item.url))
             .map((item) => ({

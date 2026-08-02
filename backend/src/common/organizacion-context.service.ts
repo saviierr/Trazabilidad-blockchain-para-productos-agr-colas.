@@ -48,4 +48,17 @@ export class OrganizacionContextService {
     }
     return transportista.id;
   }
+
+  async resolveExportadorId(user: AuthenticatedUser): Promise<string> {
+    if (!user.organizacionId) {
+      throw new ForbiddenException('El usuario no tiene una organización asociada');
+    }
+    const exportador = await this.prisma.exportador.findUnique({
+      where: { organizacionId: user.organizacionId },
+    });
+    if (!exportador) {
+      throw new ForbiddenException('El usuario no tiene una exportadora asociada');
+    }
+    return exportador.id;
+  }
 }

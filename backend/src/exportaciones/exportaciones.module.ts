@@ -1,8 +1,9 @@
 import { Module } from '@nestjs/common';
 import { ExportacionesController } from './exportaciones.controller';
+import { ExportacionesService } from './exportaciones.service';
 
-// Guards de rol en WP-04. Registro de exportación en WP-14.
 @Module({
   controllers: [ExportacionesController],
+  providers: [ExportacionesService],
 })
 export class ExportacionesModule {}
