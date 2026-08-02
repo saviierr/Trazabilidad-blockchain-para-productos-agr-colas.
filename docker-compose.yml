@@ -1,0 +1,20 @@
+# WP-02 · Backend Base — solo el servicio de PostgreSQL necesario para desarrollo local.
+# WP-31 (Dockerización completa) amplía este archivo con backend, frontend y Hyperledger Fabric.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: cacao-trazabilidad-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: cacao_user
+      POSTGRES_PASSWORD: cacao_pass
+      POSTGRES_DB: cacao_trazabilidad
+    ports:
+      # 5433 en el host: el 5432 ya está ocupado por un PostgreSQL nativo de Windows en esta máquina.
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
