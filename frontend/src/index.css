@@ -2,16 +2,40 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/inter";
+@import "@fontsource-variable/fraunces";
+@import "@fontsource/jetbrains-mono/500.css";
+@import "@fontsource/jetbrains-mono/600.css";
 
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Paleta y tipografía — fijadas en WP-03 (C8), no se vuelven a discutir después de este punto.
- * Primario: marrón cacao. Acento/success: verde orgánico. Neutros: piedra cálida. Fuente: Inter.
+ * Paleta y tipografía — rediseño de identidad visual (ver
+ * docs/plan-rediseno-identidad-visual.md). Nace del propio dominio: cacao +
+ * blockchain. Fraunces para títulos (carácter/origen), Inter para cuerpo,
+ * JetBrains Mono reservado para hashes/IDs (--ledger). 5 colores de estado
+ * por matiz, no por tono — es lo único que distingue C1 a simple vista.
  */
 @theme inline {
-    --font-heading: var(--font-sans);
+    --font-heading: 'Fraunces Variable', serif;
     --font-sans: 'Inter Variable', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    --color-cacao-950: var(--cacao-950);
+    --color-cacao-800: var(--cacao-800);
+    --color-cacao-600: var(--cacao-600);
+    --color-cacao-500: var(--cacao-500);
+    --color-cacao-100: var(--cacao-100);
+    --color-ledger: var(--ledger);
+    --color-ledger-soft: var(--ledger-soft);
+    --color-status-creado: var(--status-creado);
+    --color-status-creado-soft: var(--status-creado-soft);
+    --color-status-fermentando: var(--status-fermentando);
+    --color-status-fermentando-soft: var(--status-fermentando-soft);
+    --color-status-certificado: var(--status-certificado);
+    --color-status-certificado-soft: var(--status-certificado-soft);
+    --color-status-transporte: var(--status-transporte);
+    --color-status-transporte-soft: var(--status-transporte-soft);
+    --color-status-exportado: var(--status-exportado);
+    --color-status-exportado-soft: var(--status-exportado-soft);
     --color-sidebar-ring: var(--sidebar-ring);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -55,40 +79,59 @@
 }
 
 :root {
-    --background: oklch(0.99 0.005 80);
-    --foreground: oklch(0.2 0.02 50);
-    --card: oklch(1 0.003 80);
-    --card-foreground: oklch(0.2 0.02 50);
-    --popover: oklch(1 0.003 80);
-    --popover-foreground: oklch(0.2 0.02 50);
-    --primary: oklch(0.42 0.11 45);
-    --primary-foreground: oklch(0.98 0.01 80);
-    --secondary: oklch(0.95 0.02 75);
-    --secondary-foreground: oklch(0.25 0.02 50);
-    --muted: oklch(0.95 0.015 75);
-    --muted-foreground: oklch(0.48 0.02 55);
-    --accent: oklch(0.93 0.04 145);
-    --accent-foreground: oklch(0.28 0.06 145);
+    /* escala cacao (marca) + ledger (dato técnico: hash/ID) — dominio del
+       producto, ver docs/plan-rediseno-identidad-visual.md §2.2 */
+    --cacao-950: #241209;
+    --cacao-800: #432411;
+    --cacao-600: #7A4326;
+    --cacao-500: #8F5530;
+    --cacao-100: #F0E4D6;
+    --ledger: #4B5A6B;
+    --ledger-soft: #ECEFF2;
+
+    /* 5 estados de C1, un matiz cada uno — no variaciones de tono del mismo color */
+    --status-creado: #6B7280;      --status-creado-soft: #EEF0F1;
+    --status-fermentando: #B45309; --status-fermentando-soft: #FDF1DE;
+    --status-certificado: #15803D; --status-certificado-soft: #E5F5EA;
+    --status-transporte: #1D4ED8;  --status-transporte-soft: #E7EDFC;
+    --status-exportado: #6D28D9;   --status-exportado-soft: #F0EAFB;
+
+    --background: #F5F3EC;
+    --foreground: var(--cacao-950);
+    --card: #FFFFFF;
+    --card-foreground: var(--cacao-950);
+    --popover: #FFFFFF;
+    --popover-foreground: var(--cacao-950);
+    --primary: var(--cacao-600);
+    --primary-foreground: #FBF7EE;
+    --secondary: var(--cacao-100);
+    --secondary-foreground: var(--cacao-800);
+    --muted: #F5F3EC;
+    --muted-foreground: #7A7261;
+    --accent: var(--cacao-100);
+    --accent-foreground: var(--cacao-800);
     --destructive: oklch(0.577 0.245 27.325);
-    --success: oklch(0.45 0.12 145);
-    --success-foreground: oklch(0.98 0.02 145);
-    --border: oklch(0.9 0.015 70);
-    --input: oklch(0.9 0.015 70);
-    --ring: oklch(0.55 0.09 50);
-    --chart-1: oklch(0.55 0.14 50);
-    --chart-2: oklch(0.5 0.1 145);
-    --chart-3: oklch(0.7 0.1 80);
-    --chart-4: oklch(0.6 0.08 25);
-    --chart-5: oklch(0.45 0.03 55);
-    --radius: 0.625rem;
-    --sidebar: oklch(0.97 0.01 75);
-    --sidebar-foreground: oklch(0.2 0.02 50);
-    --sidebar-primary: oklch(0.42 0.11 45);
-    --sidebar-primary-foreground: oklch(0.98 0.01 80);
-    --sidebar-accent: oklch(0.92 0.03 145);
-    --sidebar-accent-foreground: oklch(0.28 0.06 145);
-    --sidebar-border: oklch(0.9 0.015 70);
-    --sidebar-ring: oklch(0.55 0.09 50);
+    --success: var(--status-certificado);
+    --success-foreground: #FBF7EE;
+    --border: #E1DCCC;
+    --input: #E1DCCC;
+    --ring: var(--cacao-500);
+    --chart-1: var(--status-creado);
+    --chart-2: var(--status-fermentando);
+    --chart-3: var(--status-certificado);
+    --chart-4: var(--status-transporte);
+    --chart-5: var(--status-exportado);
+    /* 0.7rem → radius-xl (×1.4) ≈ 16px, el radio de tarjeta del rediseño */
+    --radius: 0.7rem;
+    /* sidebar oscura fija (no depende de .dark — no hay selector de tema hoy) */
+    --sidebar: var(--cacao-950);
+    --sidebar-foreground: #D8CDB9;
+    --sidebar-primary: var(--cacao-600);
+    --sidebar-primary-foreground: #FBF7EE;
+    --sidebar-accent: oklch(1 0 0 / 6%);
+    --sidebar-accent-foreground: #EFE7DA;
+    --sidebar-border: oklch(1 0 0 / 8%);
+    --sidebar-ring: var(--cacao-500);
 }
 
 .dark {
@@ -136,5 +179,8 @@
     }
   html {
     @apply font-sans;
+    }
+  h1, h2, h3 {
+    @apply font-heading;
     }
 }

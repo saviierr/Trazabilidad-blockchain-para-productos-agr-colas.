@@ -19,6 +19,13 @@ const badgeVariants = cva(
         ghost:
           "hover:bg-muted hover:text-muted-foreground dark:hover:bg-muted/50",
         link: "text-primary underline-offset-4 hover:underline",
+        // 5 colores de estado (C1), uno por matiz — ver
+        // docs/plan-rediseno-identidad-visual.md §2.5.
+        "estado-creado": "bg-status-creado-soft text-status-creado",
+        "estado-fermentando": "bg-status-fermentando-soft text-status-fermentando",
+        "estado-certificado": "bg-status-certificado-soft text-status-certificado",
+        "estado-transporte": "bg-status-transporte-soft text-status-transporte",
+        "estado-exportado": "bg-status-exportado-soft text-status-exportado",
       },
     },
     defaultVariants: {

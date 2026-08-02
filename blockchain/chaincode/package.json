@@ -1,0 +1,26 @@
+{
+  "name": "lote-contract",
+  "version": "1.0.0",
+  "description": "WP-21 · Chaincode de trazabilidad de cacao — 6 funciones de C4 sobre CooperativaMSP/CertificadoraMSP/TransportistaMSP/ExportadorMSP.",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc -w",
+    "test": "jest",
+    "start": "fabric-chaincode-node start"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "fabric-contract-api": "^2.5.6",
+    "fabric-shim": "^2.5.6"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.14",
+    "@types/node": "^20.19.9",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.2.5",
+    "typescript": "^5.6.3"
+  }
+}

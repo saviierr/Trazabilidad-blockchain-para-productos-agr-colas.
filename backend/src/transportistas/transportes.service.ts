@@ -12,6 +12,8 @@ import {
 } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { OrganizacionContextService } from '../common/organizacion-context.service';
+import { FabricGatewayService } from '../fabric-gateway/fabric-gateway.service';
+import { OrgChaincode } from '../fabric-gateway/types';
 import type { AuthenticatedUser } from '../auth/types/authenticated-user';
 import type { CreateTransporteDto } from './dto/create-transporte.dto';
 import type { ActualizarEstadoTransporteDto } from './dto/actualizar-estado-transporte.dto';
@@ -28,10 +30,13 @@ export class TransportesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly organizacionContext: OrganizacionContextService,
+    private readonly fabricGateway: FabricGatewayService,
   ) {}
 
   // C7: "Registrar transporte" — solo Transportista, sin restricción sobre qué
   // lote (no hay relación de pertenencia previa, igual que Certificadora en WP-12).
+  // WP-22 §2.3: TransportistaMSP no tiene peer propio — FabricGatewayService
+  // lo enruta a través del peer de Cooperativa, firmando como TransportistaMSP.
   async create(dto: CreateTransporteDto, user: AuthenticatedUser) {
     const lote = await this.prisma.lote.findUnique({ where: { id: dto.loteId } });
     if (!lote) {
@@ -47,10 +52,29 @@ export class TransportesService {
       await this.organizacionContext.resolveTransportistaId(user);
 
     const fechaSalida = new Date(dto.fechaSalida);
+    // C4 no define un esquema propio para `tiempos` — se compone un texto
+    // legible a partir de los campos que ya expone el DTO (WP-22, decisión
+    // registrada porque C4 deja el formato abierto).
+    const tiempos = dto.fechaLlegadaEstimada
+      ? `Salida: ${dto.fechaSalida} · Llegada estimada: ${dto.fechaLlegadaEstimada}`
+      : `Salida: ${dto.fechaSalida}`;
+
+    const { transactionId } = await this.fabricGateway.submit(
+      OrgChaincode.TRANSPORTISTA,
+      'RegisterTransport',
+      lote.id,
+      transportistaId,
+      dto.ruta,
+      tiempos,
+    );
 
     await this.prisma.lote.update({
       where: { id: lote.id },
-      data: { estado: EstadoLote.EN_TRANSPORTE, fechaTransporte: fechaSalida },
+      data: {
+        estado: EstadoLote.EN_TRANSPORTE,
+        fechaTransporte: fechaSalida,
+        ultimaTxHashBlockchain: transactionId,
+      },
     });
 
     const transporte = await this.prisma.transporte.create({
@@ -73,6 +97,7 @@ export class TransportesService {
         actorUsuarioId: user.id,
         actorOrganizacionId: user.organizacionId,
         datosEspecificos: { ruta: dto.ruta, fechaSalida: dto.fechaSalida },
+        hashTransaccionBlockchain: transactionId,
       },
     });
 

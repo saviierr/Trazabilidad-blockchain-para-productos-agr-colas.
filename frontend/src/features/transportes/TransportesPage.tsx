@@ -12,12 +12,15 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { PageHeader } from '@/components/layout/PageHeader'
+import { useAuth } from '@/lib/auth-context'
 import { useMarcarEntregado, useTransportes } from './api'
 import { TransporteFormDialog } from './TransporteFormDialog'
 import { IncidenciaFormDialog } from './IncidenciaFormDialog'
 import type { Transporte } from './types'
 
 export function TransportesPage() {
+  const { user } = useAuth()
   const { data: transportes, isLoading, isError } = useTransportes()
   const marcarEntregado = useMarcarEntregado()
 
@@ -26,22 +29,24 @@ export function TransportesPage() {
     Transporte | undefined
   >(undefined)
 
+  // Nuevo transporte / marcar entregado / incidencia: solo TRANSPORTISTA
+  // (ver docs/WP-15-plan-modulo-lotes.md §4.2).
+  const puedeGestionar = user?.rol === 'TRANSPORTISTA'
+
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-semibold tracking-tight">
-            Transportistas
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            Registro de transporte, incidencias y entrega de los lotes.
-          </p>
-        </div>
-        <Button onClick={() => setFormAbierto(true)}>
-          <Plus />
-          Nuevo transporte
-        </Button>
-      </div>
+      <PageHeader
+        title="Transportistas"
+        description="Registro de transporte, incidencias y entrega de los lotes."
+        action={
+          puedeGestionar && (
+            <Button onClick={() => setFormAbierto(true)}>
+              <Plus />
+              Nuevo transporte
+            </Button>
+          )
+        }
+      />
 
       <Card>
         <CardContent className="p-0">
@@ -102,7 +107,7 @@ export function TransportesPage() {
                       )}
                     </TableCell>
                     <TableCell className="text-right">
-                      {transporte.estado === 'EN_RUTA' && (
+                      {puedeGestionar && transporte.estado === 'EN_RUTA' && (
                         <>
                           <Button
                             variant="ghost"

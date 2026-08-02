@@ -1,5 +1,6 @@
 import { Construction } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
+import { PageHeader } from '@/components/layout/PageHeader'
 
 interface ProximamentePageProps {
   title: string
@@ -8,12 +9,7 @@ interface ProximamentePageProps {
 export function ProximamentePage({ title }: ProximamentePageProps) {
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h2 className="text-2xl font-semibold tracking-tight">{title}</h2>
-        <p className="text-sm text-muted-foreground">
-          Este módulo se implementa en el Sprint 1.
-        </p>
-      </div>
+      <PageHeader title={title} description="Este módulo se implementa en el Sprint 1." />
 
       <Card>
         <CardContent className="flex flex-col items-center gap-3 py-16 text-center">

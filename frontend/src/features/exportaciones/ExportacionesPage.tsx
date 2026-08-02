@@ -11,29 +11,33 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { PageHeader } from '@/components/layout/PageHeader'
+import { useAuth } from '@/lib/auth-context'
 import { useExportaciones } from './api'
 import { ExportacionFormDialog } from './ExportacionFormDialog'
 
 export function ExportacionesPage() {
+  const { user } = useAuth()
   const { data: exportaciones, isLoading, isError } = useExportaciones()
   const [formAbierto, setFormAbierto] = useState(false)
 
+  // Nueva exportación: solo EXPORTADOR (ver docs/WP-15-plan-modulo-lotes.md §4.2).
+  const puedeGestionar = user?.rol === 'EXPORTADOR'
+
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-semibold tracking-tight">
-            Exportaciones
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            Registro de la salida de los lotes hacia su país de destino.
-          </p>
-        </div>
-        <Button onClick={() => setFormAbierto(true)}>
-          <Plus />
-          Nueva exportación
-        </Button>
-      </div>
+      <PageHeader
+        title="Exportaciones"
+        description="Registro de la salida de los lotes hacia su país de destino."
+        action={
+          puedeGestionar && (
+            <Button onClick={() => setFormAbierto(true)}>
+              <Plus />
+              Nueva exportación
+            </Button>
+          )
+        }
+      />
 
       <Card>
         <CardContent className="p-0">

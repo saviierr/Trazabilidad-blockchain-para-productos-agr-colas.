@@ -16,10 +16,24 @@ build/
 .next/
 out/
 
-# Blockchain — wallets e identidades nunca se versionan
+# Blockchain — wallets e identidades nunca se versionan.
+# (organizations/peerOrganizations y ordererOrganizations son el material MSP
+# generado por Fabric CA en tiempo de ejecución — WP-20 no usa `cryptogen`,
+# así que no aplica crypto-config/)
 blockchain/wallets/
-blockchain/network/crypto-config/
+blockchain/network/organizations/fabric-ca-client/
+blockchain/network/organizations/peerOrganizations/
+blockchain/network/organizations/ordererOrganizations/
 blockchain/network/channel-artifacts/
+blockchain/network/system-genesis-block/
+blockchain/network/organizations/fabric-ca-client-config.yaml
+# WP-21: árbol de empaquetado temporal generado por deployChaincode.sh
+blockchain/chaincode/package-src/
+# Home de cada Fabric CA server: su propia llave privada (msp/keystore/*_sk),
+# IssuerSecretKey/IssuerRevocationPrivateKey y fabric-ca-server.db (contiene
+# los secretos de registro de cada identidad emitida) — todo generado en
+# tiempo de ejecución por docker-compose-ca.yaml, nunca a mano.
+blockchain/network/organizations/fabric-ca/*/
 *.tar.gz
 
 # Prisma

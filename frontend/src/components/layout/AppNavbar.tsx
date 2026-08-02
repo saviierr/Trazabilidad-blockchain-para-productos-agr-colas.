@@ -7,7 +7,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
@@ -44,9 +43,12 @@ export function AppNavbar() {
             </Avatar>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>
+            {/* Texto estático, no un grupo interactivo — se evita
+                DropdownMenuLabel/Group (Menu.GroupLabel de base-ui) a
+                propósito, ver hallazgo en la sesión de WP-23. */}
+            <div className="px-1.5 py-1 text-xs font-medium text-muted-foreground">
               {user?.email ?? 'Mi cuenta'}
-            </DropdownMenuLabel>
+            </div>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout}>
               <LogOut />

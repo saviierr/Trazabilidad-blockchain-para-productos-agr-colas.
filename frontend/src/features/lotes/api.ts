@@ -5,8 +5,11 @@ import {
 } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import type {
+  CorregirLoteInput,
+  Evento,
   FermentacionLoteInput,
   Lote,
+  LoteDetalle,
   RecepcionLoteInput,
 } from './types'
 
@@ -18,6 +21,51 @@ export function useLotes() {
     queryFn: async () => {
       const { data } = await api.get<Lote[]>('/lotes')
       return data
+    },
+  })
+}
+
+export function useLote(id: string | undefined) {
+  return useQuery({
+    queryKey: [...QUERY_KEY, id],
+    queryFn: async () => {
+      const { data } = await api.get<LoteDetalle>(`/lotes/${id}`)
+      return data
+    },
+    enabled: id !== undefined,
+  })
+}
+
+export function useHistorialLote(id: string | undefined) {
+  return useQuery({
+    queryKey: [...QUERY_KEY, id, 'historial'],
+    queryFn: async () => {
+      const { data } = await api.get<Evento[]>(`/lotes/${id}/historial`)
+      return data
+    },
+    enabled: id !== undefined,
+  })
+}
+
+export function useCorregirLote() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({
+      id,
+      input,
+    }: {
+      id: string
+      input: CorregirLoteInput
+    }) => {
+      const { data } = await api.put<Lote>(`/lotes/${id}`, input)
+      return data
+    },
+    onSuccess: (_data, { id }) => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY })
+      queryClient.invalidateQueries({ queryKey: [...QUERY_KEY, id] })
+      queryClient.invalidateQueries({
+        queryKey: [...QUERY_KEY, id, 'historial'],
+      })
     },
   })
 }

@@ -12,6 +12,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { PageHeader } from '@/components/layout/PageHeader'
+import { useAuth } from '@/lib/auth-context'
 import { useCertificados, verPdfCertificado } from './api'
 import { CertificadoFormDialog } from './CertificadoFormDialog'
 import type { EstadoCertificado } from './types'
@@ -29,25 +31,27 @@ const ESTADO_LABEL: Record<EstadoCertificado, string> = {
 }
 
 export function CertificadosPage() {
+  const { user } = useAuth()
   const { data: certificados, isLoading, isError } = useCertificados()
   const [formAbierto, setFormAbierto] = useState(false)
 
+  // Nuevo certificado: solo CERTIFICADORA (ver docs/WP-15-plan-modulo-lotes.md §4.2).
+  const puedeGestionar = user?.rol === 'CERTIFICADORA'
+
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-semibold tracking-tight">
-            Certificadoras
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            Emisión y consulta de certificados de los lotes.
-          </p>
-        </div>
-        <Button onClick={() => setFormAbierto(true)}>
-          <Plus />
-          Nuevo certificado
-        </Button>
-      </div>
+      <PageHeader
+        title="Certificadoras"
+        description="Emisión y consulta de certificados de los lotes."
+        action={
+          puedeGestionar && (
+            <Button onClick={() => setFormAbierto(true)}>
+              <Plus />
+              Nuevo certificado
+            </Button>
+          )
+        }
+      />
 
       <Card>
         <CardContent className="p-0">

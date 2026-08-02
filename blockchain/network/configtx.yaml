@@ -1,0 +1,200 @@
+# WP-20 · Red Hyperledger Fabric — definición de organizaciones y del canal.
+# Rutas MSPDir/TLS relativas a blockchain/network/ (donde corre configtxgen).
+# Sin canal de sistema/bloque génesis: se usa la Channel Participation API de
+# Fabric 2.3+ (osnadmin) — ver docs/WP-20-plan-red-hyperledger-fabric.md §2.2.
+
+Organizations:
+  - &OrdererOrg
+    Name: OrdererMSP
+    ID: OrdererMSP
+    MSPDir: organizations/ordererOrganizations/orderer.cacao.local/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('OrdererMSP.member')"
+      Writers:
+        Type: Signature
+        Rule: "OR('OrdererMSP.member')"
+      Admins:
+        Type: Signature
+        Rule: "OR('OrdererMSP.admin')"
+    OrdererEndpoints:
+      - orderer.cacao.local:7050
+
+  - &CooperativaMSP
+    Name: CooperativaMSP
+    ID: CooperativaMSP
+    MSPDir: organizations/peerOrganizations/cooperativa.cacao.local/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('CooperativaMSP.admin', 'CooperativaMSP.peer', 'CooperativaMSP.client')"
+      Writers:
+        Type: Signature
+        Rule: "OR('CooperativaMSP.admin', 'CooperativaMSP.client')"
+      Admins:
+        Type: Signature
+        Rule: "OR('CooperativaMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('CooperativaMSP.peer')"
+    AnchorPeers:
+      - Host: peer0.cooperativa.cacao.local
+        Port: 7051
+
+  - &CertificadoraMSP
+    Name: CertificadoraMSP
+    ID: CertificadoraMSP
+    MSPDir: organizations/peerOrganizations/certificadora.cacao.local/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('CertificadoraMSP.admin', 'CertificadoraMSP.peer', 'CertificadoraMSP.client')"
+      Writers:
+        Type: Signature
+        Rule: "OR('CertificadoraMSP.admin', 'CertificadoraMSP.client')"
+      Admins:
+        Type: Signature
+        Rule: "OR('CertificadoraMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('CertificadoraMSP.peer')"
+    AnchorPeers:
+      - Host: peer0.certificadora.cacao.local
+        Port: 9051
+
+  - &ExportadorMSP
+    Name: ExportadorMSP
+    ID: ExportadorMSP
+    MSPDir: organizations/peerOrganizations/exportador.cacao.local/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('ExportadorMSP.admin', 'ExportadorMSP.peer', 'ExportadorMSP.client')"
+      Writers:
+        Type: Signature
+        Rule: "OR('ExportadorMSP.admin', 'ExportadorMSP.client')"
+      Admins:
+        Type: Signature
+        Rule: "OR('ExportadorMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('ExportadorMSP.peer')"
+    AnchorPeers:
+      - Host: peer0.exportador.cacao.local
+        Port: 11051
+
+  # Organización de solo cliente: sin peer propio, sin AnchorPeers (§2.1 del plan).
+  - &TransportistaMSP
+    Name: TransportistaMSP
+    ID: TransportistaMSP
+    MSPDir: organizations/peerOrganizations/transportista.cacao.local/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('TransportistaMSP.admin', 'TransportistaMSP.client')"
+      Writers:
+        Type: Signature
+        Rule: "OR('TransportistaMSP.admin', 'TransportistaMSP.client')"
+      Admins:
+        Type: Signature
+        Rule: "OR('TransportistaMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('TransportistaMSP.client')"
+
+Capabilities:
+  Channel: &ChannelCapabilities
+    V2_0: true
+  Orderer: &OrdererCapabilities
+    V2_0: true
+  Application: &ApplicationCapabilities
+    V2_5: true
+
+Application: &ApplicationDefaults
+  Organizations:
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+    LifecycleEndorsement:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Endorsement"
+    Endorsement:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Endorsement"
+  Capabilities:
+    <<: *ApplicationCapabilities
+
+# Raft de un solo nodo — simplificación de MVP documentada en §2.2 del plan.
+Orderer: &OrdererDefaults
+  OrdererType: etcdraft
+  Addresses:
+    - orderer.cacao.local:7050
+  EtcdRaft:
+    Consenters:
+      - Host: orderer.cacao.local
+        Port: 7050
+        ClientTLSCert: organizations/ordererOrganizations/orderer.cacao.local/orderers/orderer.orderer.cacao.local/tls/server.crt
+        ServerTLSCert: organizations/ordererOrganizations/orderer.cacao.local/orderers/orderer.orderer.cacao.local/tls/server.crt
+  BatchTimeout: 2s
+  BatchSize:
+    MaxMessageCount: 10
+    AbsoluteMaxBytes: 99 MB
+    PreferredMaxBytes: 512 KB
+  Organizations:
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+    BlockValidation:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+
+Channel: &ChannelDefaults
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+  Capabilities:
+    <<: *ChannelCapabilities
+
+Profiles:
+  # Perfil de canal de aplicación único (C5/C4 no requieren más de uno).
+  # Se usa directamente con `configtxgen -outputBlock` + Channel Participation
+  # API — no hay perfil de "genesis"/canal de sistema en Fabric 2.3+.
+  TrazabilidadCacaoChannel:
+    <<: *ChannelDefaults
+    Orderer:
+      <<: *OrdererDefaults
+      Organizations:
+        - *OrdererOrg
+      Capabilities:
+        <<: *OrdererCapabilities
+    Application:
+      <<: *ApplicationDefaults
+      Organizations:
+        - *CooperativaMSP
+        - *CertificadoraMSP
+        - *ExportadorMSP
+        - *TransportistaMSP
+      Capabilities:
+        <<: *ApplicationCapabilities

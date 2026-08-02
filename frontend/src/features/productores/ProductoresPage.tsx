@@ -22,13 +22,20 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { PageHeader } from '@/components/layout/PageHeader'
+import { useAuth } from '@/lib/auth-context'
 import { useDeleteProductor, useProductores } from './api'
 import { ProductorFormDialog } from './ProductorFormDialog'
 import type { Productor } from './types'
 
 export function ProductoresPage() {
+  const { user } = useAuth()
   const { data: productores, isLoading, isError } = useProductores()
   const eliminar = useDeleteProductor()
+
+  // Nuevo/editar/eliminar productor: ADMIN o COOPERATIVA (ver
+  // docs/WP-15-plan-modulo-lotes.md §4.2).
+  const puedeGestionar = user?.rol === 'ADMIN' || user?.rol === 'COOPERATIVA'
 
   const [formAbierto, setFormAbierto] = useState(false)
   const [productorEnEdicion, setProductorEnEdicion] = useState<
@@ -49,20 +56,18 @@ export function ProductoresPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-semibold tracking-tight">
-            Productores
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            Gestión de los productores de cacao afiliados a tu cooperativa.
-          </p>
-        </div>
-        <Button onClick={abrirCreacion}>
-          <Plus />
-          Nuevo productor
-        </Button>
-      </div>
+      <PageHeader
+        title="Productores"
+        description="Gestión de los productores de cacao afiliados a tu cooperativa."
+        action={
+          puedeGestionar && (
+            <Button onClick={abrirCreacion}>
+              <Plus />
+              Nuevo productor
+            </Button>
+          )
+        }
+      />
 
       <Card>
         <CardContent className="p-0">
@@ -109,22 +114,26 @@ export function ProductoresPage() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        onClick={() => abrirEdicion(productor)}
-                      >
-                        <Pencil />
-                        <span className="sr-only">Editar</span>
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        onClick={() => setProductorAEliminar(productor)}
-                      >
-                        <Trash2 />
-                        <span className="sr-only">Eliminar</span>
-                      </Button>
+                      {puedeGestionar && (
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            onClick={() => abrirEdicion(productor)}
+                          >
+                            <Pencil />
+                            <span className="sr-only">Editar</span>
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            onClick={() => setProductorAEliminar(productor)}
+                          >
+                            <Trash2 />
+                            <span className="sr-only">Eliminar</span>
+                          </Button>
+                        </>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}

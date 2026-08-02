@@ -1,7 +1,6 @@
 import {
   LayoutDashboard,
   Sprout,
-  Users,
   ShieldCheck,
   Truck,
   Ship,
@@ -15,10 +14,12 @@ export interface NavItem {
   icon: LucideIcon
 }
 
+// "Cooperativas" no tiene ítem propio: C5 no define un endpoint de consulta
+// para ese módulo — sus únicas acciones (recepción, fermentación) ya viven
+// dentro de la página Lotes.
 export const navItems: NavItem[] = [
   { title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard },
   { title: 'Productores', url: '/productores', icon: Sprout },
-  { title: 'Cooperativas', url: '/cooperativas', icon: Users },
   { title: 'Certificadoras', url: '/certificadoras', icon: ShieldCheck },
   { title: 'Transportistas', url: '/transportistas', icon: Truck },
   { title: 'Exportaciones', url: '/exportaciones', icon: Ship },

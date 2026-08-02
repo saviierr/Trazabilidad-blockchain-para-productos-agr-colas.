@@ -10,6 +10,8 @@ import { join } from 'node:path';
 import { EstadoLote, Prisma, RolNombre, TipoEvento } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { OrganizacionContextService } from '../common/organizacion-context.service';
+import { FabricGatewayService } from '../fabric-gateway/fabric-gateway.service';
+import { OrgChaincode } from '../fabric-gateway/types';
 import type { AuthenticatedUser } from '../auth/types/authenticated-user';
 import type { CreateCertificadoDto } from './dto/create-certificado.dto';
 
@@ -27,6 +29,7 @@ export class CertificadosService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly organizacionContext: OrganizacionContextService,
+    private readonly fabricGateway: FabricGatewayService,
   ) {}
 
   async create(
@@ -55,6 +58,19 @@ export class CertificadosService {
       await this.organizacionContext.resolveCertificadoraId(user);
 
     const hash = createHash('sha256').update(archivo.buffer).digest('hex');
+
+    // WP-22 §2.4/§2.7: el chaincode se invoca antes de cualquier escritura
+    // (ni disco ni Postgres) — si lo rechaza, no queda nada a medias. Sin
+    // PKI de documento (§2.7): se reutiliza el mismo hash SHA-256 como
+    // `firmaCertificadora`.
+    const { transactionId } = await this.fabricGateway.submit(
+      OrgChaincode.CERTIFICADORA,
+      'RegisterCertification',
+      lote.id,
+      hash,
+      hash,
+    );
+
     mkdirSync(UPLOADS_DIR, { recursive: true });
     writeFileSync(join(UPLOADS_DIR, `${hash}.pdf`), archivo.buffer);
 
@@ -64,7 +80,11 @@ export class CertificadosService {
     // llamada — si se actualiza después, la respuesta queda con el estado viejo).
     await this.prisma.lote.update({
       where: { id: lote.id },
-      data: { estado: EstadoLote.CERTIFICADO, hashCertificado: hash },
+      data: {
+        estado: EstadoLote.CERTIFICADO,
+        hashCertificado: hash,
+        ultimaTxHashBlockchain: transactionId,
+      },
     });
 
     const id = randomUUID();
@@ -94,6 +114,7 @@ export class CertificadosService {
           tipoCertificacion: dto.tipoCertificacion,
           hashArchivo: hash,
         },
+        hashTransaccionBlockchain: transactionId,
       },
     });
 
