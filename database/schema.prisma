@@ -1,0 +1,355 @@
+// WP-01 · Modelo Entidad-Relación Completo
+// Sistema de Trazabilidad Descentralizado basado en Blockchain para la Cadena de Suministro de Cacao Orgánico
+// Traducción 1:1 de database/er-diagram.md — listo para copiarse a backend/prisma/schema.prisma en WP-02.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────
+// Enums
+// ─────────────────────────────────────────────
+
+enum RolNombre {
+  ADMIN
+  PRODUCTOR
+  COOPERATIVA
+  CERTIFICADORA
+  TRANSPORTISTA
+  EXPORTADOR
+  COMPRADOR
+}
+
+enum TipoOrganizacion {
+  COOPERATIVA
+  CERTIFICADORA
+  TRANSPORTISTA
+  EXPORTADOR
+}
+
+// Espejo exacto de C1 (Plan_Maestro_Fase3_Desarrollo.md §2) — orden estricto, sin saltos hacia atrás.
+enum EstadoLote {
+  CREADO
+  FERMENTANDO
+  CERTIFICADO
+  EN_TRANSPORTE
+  EXPORTADO
+}
+
+enum TipoEvento {
+  CREACION
+  FERMENTACION
+  CERTIFICACION
+  TRANSPORTE
+  EXPORTACION
+  CORRECCION
+}
+
+enum EstadoCertificado {
+  VIGENTE
+  VENCIDO
+  REVOCADO
+}
+
+enum EstadoTransporte {
+  EN_RUTA
+  ENTREGADO
+}
+
+enum AccionAuditoria {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  LOGIN_FAILED
+  EXPORT
+  OTHER
+}
+
+// ─────────────────────────────────────────────
+// Identidad y organizaciones
+// ─────────────────────────────────────────────
+
+model Rol {
+  id          String    @id @default(uuid())
+  nombre      RolNombre @unique
+  descripcion String?
+  usuarios    Usuario[]
+  createdAt   DateTime  @default(now())
+
+  @@map("roles")
+}
+
+model Usuario {
+  id             String        @id @default(uuid())
+  email          String        @unique
+  passwordHash   String
+  nombre         String
+  activo         Boolean       @default(true)
+  rolId          String
+  rol            Rol           @relation(fields: [rolId], references: [id])
+  organizacionId String?
+  organizacion   Organizacion? @relation(fields: [organizacionId], references: [id])
+  productor      Productor?
+  eventos        Evento[]
+  auditorias     Auditoria[]
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@map("usuarios")
+}
+
+// Tabla padre de todo actor institucional; especializada 1:1 según `tipo`.
+model Organizacion {
+  id             String           @id @default(uuid())
+  nombre         String
+  tipo           TipoOrganizacion
+  mspId          String?          @unique
+  esValidadorRed Boolean          @default(false)
+  direccion      String?
+  contacto       String?
+  createdAt      DateTime         @default(now())
+
+  usuarios      Usuario[]
+  eventos       Evento[]
+  cooperativa   Cooperativa?
+  certificadora Certificadora?
+  transportista Transportista?
+  exportador    Exportador?
+
+  @@map("organizaciones")
+}
+
+model Cooperativa {
+  id             String       @id @default(uuid())
+  organizacionId String       @unique
+  organizacion   Organizacion @relation(fields: [organizacionId], references: [id])
+  ubicacion      String?
+
+  productores Productor[]
+  lotes       Lote[]
+
+  @@map("cooperativas")
+}
+
+model Certificadora {
+  id                   String       @id @default(uuid())
+  organizacionId       String       @unique
+  organizacion         Organizacion @relation(fields: [organizacionId], references: [id])
+  entidadAcreditadora  String?
+  numeroAcreditacion   String?
+  vigenciaAcreditacion DateTime?
+
+  certificados Certificado[]
+
+  @@map("certificadoras")
+}
+
+model Transportista {
+  id             String       @id @default(uuid())
+  organizacionId String       @unique
+  organizacion   Organizacion @relation(fields: [organizacionId], references: [id])
+  tipoVehiculo   String?
+  placa          String?
+
+  transportes Transporte[]
+
+  @@map("transportistas")
+}
+
+model Exportador {
+  id                  String       @id @default(uuid())
+  organizacionId      String       @unique
+  organizacion        Organizacion @relation(fields: [organizacionId], references: [id])
+  paisOperacion       String?
+  licenciaExportacion String?
+
+  exportaciones Exportacion[]
+
+  @@map("exportadores")
+}
+
+// ─────────────────────────────────────────────
+// Cadena de suministro
+// ─────────────────────────────────────────────
+
+model Productor {
+  id            String      @id @default(uuid())
+  usuarioId     String?     @unique
+  usuario       Usuario?    @relation(fields: [usuarioId], references: [id])
+  cooperativaId String
+  cooperativa   Cooperativa @relation(fields: [cooperativaId], references: [id])
+  nombre        String
+  cedula        String      @unique // off-chain, nunca se publica (Fase II §6)
+  telefono      String?
+  direccion     String?
+  activo        Boolean     @default(true) // eliminación lógica (WP-10)
+
+  // Fuente de verdad off-chain. Cómo el chaincode valida RegisterFermentation (C4)
+  // contra este límite sin duplicarlo on-chain es una decisión abierta para WP-21
+  // (ver database/er-diagram.md §4.1) — no se asume aquí un cambio a CreateLot.
+  capacidadProductivaMaximaKg Decimal @db.Decimal(10, 2)
+
+  createdAt DateTime @default(now())
+
+  lotes Lote[]
+
+  @@map("productores")
+}
+
+// Proyección de lectura del estado on-chain (C2). Fuente de verdad = ledger de Fabric;
+// esta tabla se sincroniza vía Fabric Gateway (WP-22) para permitir búsquedas y dashboard.
+model Lote {
+  id            String      @id @default(uuid()) // == loteId on-chain
+  productorId   String
+  productor     Productor   @relation(fields: [productorId], references: [id])
+  cooperativaId String
+  cooperativa   Cooperativa @relation(fields: [cooperativaId], references: [id])
+
+  estado           EstadoLote @default(CREADO)
+  fechaCosecha     DateTime
+  fechaTransporte  DateTime?
+  fechaExportacion DateTime?
+  fechaSecado      DateTime?
+  pesoInicialKg    Decimal?   @db.Decimal(10, 2)
+  pesoFermentadoKg Decimal?   @db.Decimal(10, 2) // peso post-fermentación/secado (C4.RegisterFermentation), distinto de pesoInicialKg
+
+  hashCertificado        String? // espejo de C2.hashCertificado una vez emitido
+  ultimaTxHashBlockchain String? // referencia a la última transacción confirmada en el ledger
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  eventos      Evento[]
+  certificados Certificado[]
+  transporte   Transporte?
+  exportacion  Exportacion?
+
+  @@map("lotes")
+}
+
+// Proyección de lectura del array historialEventos on-chain (C2).
+model Evento {
+  id     String @id @default(uuid())
+  loteId String
+  lote   Lote   @relation(fields: [loteId], references: [id])
+
+  tipo TipoEvento
+
+  actorUsuarioId      String
+  actorUsuario        Usuario       @relation(fields: [actorUsuarioId], references: [id])
+  actorOrganizacionId String?
+  actorOrganizacion   Organizacion? @relation(fields: [actorOrganizacionId], references: [id])
+
+  datosEspecificos          Json? // payload propio del tipo de evento (peso, ruta, tiempos, etc.)
+  // Nullable: hasta WP-22 (Fabric Gateway) los eventos de Sprint 1 se registran sin
+  // transacción on-chain todavía (Desarrollo.md: "Todavía no se utilizará blockchain").
+  hashTransaccionBlockchain String? // referencia a la tx on-chain que originó el evento, una vez exista
+  firmaDigital              String? // espejo de C2.firmaDigital: firma criptográfica del actor que registra esta transacción
+
+  timestamp DateTime @default(now())
+
+  @@map("eventos")
+}
+
+model Certificado {
+  id              String        @id @default(uuid())
+  loteId          String
+  lote            Lote          @relation(fields: [loteId], references: [id])
+  certificadoraId String
+  certificadora   Certificadora @relation(fields: [certificadoraId], references: [id])
+
+  tipoCertificacion String
+  archivoPdfUrl     String // ubicación off-chain del PDF completo (C3)
+  hashArchivo       String // SHA-256, espejo de C2.hashCertificado
+  fechaEmision      DateTime
+  fechaVencimiento  DateTime?
+  estado            EstadoCertificado @default(VIGENTE)
+
+  createdAt DateTime @default(now())
+
+  @@map("certificados")
+}
+
+// No estaba en las 13 entidades mínimas de WP-01: se agrega en WP-13 porque C5
+// expone dos endpoints propios (POST /transporte, PUT /transporte/:id/estado) y
+// el DoD exige un estado actualizable + historial de incidencias — no alcanza
+// con una fecha suelta en Lote. Un transporte activo por lote (MVP), ver
+// docs/WP-13-plan-modulo-transportistas.md §2.
+model Transporte {
+  id     String @id @default(uuid())
+  loteId String @unique
+  lote   Lote   @relation(fields: [loteId], references: [id])
+
+  transportistaId String
+  transportista   Transportista @relation(fields: [transportistaId], references: [id])
+
+  ruta                 String
+  fechaSalida          DateTime
+  fechaLlegadaEstimada DateTime?
+  fechaLlegadaReal     DateTime? // se llena al marcar ENTREGADO
+  estado               EstadoTransporte @default(EN_RUTA)
+
+  incidencias Incidencia[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("transportes")
+}
+
+// Incidencias durante el traslado — no cambian el estado del Transporte por sí
+// solas (ver §3 del plan de WP-13).
+model Incidencia {
+  id           String     @id @default(uuid())
+  transporteId String
+  transporte   Transporte @relation(fields: [transporteId], references: [id])
+
+  descripcion String
+  fecha       DateTime @default(now())
+
+  createdAt DateTime @default(now())
+
+  @@map("incidencias")
+}
+
+model Exportacion {
+  id           String     @id @default(uuid())
+  loteId       String     @unique
+  lote         Lote       @relation(fields: [loteId], references: [id])
+  exportadorId String
+  exportador   Exportador @relation(fields: [exportadorId], references: [id])
+
+  empresaCompradora         String
+  paisDestino               String
+  fechaExportacion          DateTime
+  numeroDocumentoAduanero   String?
+  hashTransaccionBlockchain String?
+
+  createdAt DateTime @default(now())
+
+  @@map("exportaciones")
+}
+
+// Bitácora de mutaciones a nivel de API/sistema — distinta del historial on-chain (Evento).
+model Auditoria {
+  id              String          @id @default(uuid())
+  entidadAfectada String
+  entidadId       String
+  accion          AccionAuditoria
+  usuarioId       String?
+  usuario         Usuario?        @relation(fields: [usuarioId], references: [id])
+
+  valoresAnteriores Json?
+  valoresNuevos     Json?
+  ip                String?
+
+  timestamp DateTime @default(now())
+
+  @@map("auditoria")
+}
