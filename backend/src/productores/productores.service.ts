@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { Prisma, RolNombre, type Productor } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
-import { CooperativaContextService } from '../common/cooperativa-context.service';
+import { OrganizacionContextService } from '../common/organizacion-context.service';
 import type { AuthenticatedUser } from '../auth/types/authenticated-user';
 import type { CreateProductorDto } from './dto/create-productor.dto';
 import type { UpdateProductorDto } from './dto/update-productor.dto';
@@ -19,13 +19,13 @@ const INCLUDE_COOPERATIVA = {
 export class ProductoresService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly cooperativaContext: CooperativaContextService,
+    private readonly organizacionContext: OrganizacionContextService,
   ) {}
 
   async create(dto: CreateProductorDto, user: AuthenticatedUser) {
     const cooperativaId =
       user.rol === RolNombre.COOPERATIVA
-        ? await this.cooperativaContext.resolveCooperativaId(user)
+        ? await this.organizacionContext.resolveCooperativaId(user)
         : dto.cooperativaId;
 
     if (!cooperativaId) {
@@ -55,7 +55,7 @@ export class ProductoresService {
 
     if (user.rol === RolNombre.COOPERATIVA) {
       where.cooperativaId =
-        await this.cooperativaContext.resolveCooperativaId(user);
+        await this.organizacionContext.resolveCooperativaId(user);
     } else if (user.rol === RolNombre.PRODUCTOR) {
       where.usuarioId = user.id;
     }
@@ -106,7 +106,7 @@ export class ProductoresService {
     }
     if (user.rol === RolNombre.COOPERATIVA) {
       const cooperativaId =
-        await this.cooperativaContext.resolveCooperativaId(user);
+        await this.organizacionContext.resolveCooperativaId(user);
       if (productor.cooperativaId !== cooperativaId) {
         throw new NotFoundException('Productor no encontrado');
       }

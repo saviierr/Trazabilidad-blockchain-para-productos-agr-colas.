@@ -109,9 +109,12 @@ describe('Auth y roles (e2e)', () => {
     });
   });
 
-  // "Crear lote" (POST /cooperativas/recepcion) y "Registrar fermentación/secado"
-  // (POST /cooperativas/fermentacion) ya no son placeholders sin cuerpo desde WP-11
-  // — su matriz de permisos + flujo real se prueba en test/cooperativas.e2e-spec.ts.
+  // "Crear lote" (POST /cooperativas/recepcion), "Registrar fermentación/secado"
+  // (POST /cooperativas/fermentacion, WP-11), "Emitir certificado" (POST
+  // /certificados, WP-12) y "Registrar transporte" (POST /transporte, WP-13) ya
+  // no son placeholders sin cuerpo — su matriz de permisos + flujo real se
+  // prueba en cooperativas.e2e-spec.ts, certificadoras.e2e-spec.ts y
+  // transportistas.e2e-spec.ts respectivamente.
   describe('Matriz de permisos C7 — un solo rol por acción', () => {
     const casos: {
       metodo: 'post';
@@ -119,18 +122,6 @@ describe('Auth y roles (e2e)', () => {
       rolPermitido: keyof typeof CREDENCIALES;
       accion: string;
     }[] = [
-      {
-        metodo: 'post',
-        ruta: '/certificados',
-        rolPermitido: 'CERTIFICADORA',
-        accion: 'emitir-certificado',
-      },
-      {
-        metodo: 'post',
-        ruta: '/transporte',
-        rolPermitido: 'TRANSPORTISTA',
-        accion: 'registrar-transporte',
-      },
       {
         metodo: 'post',
         ruta: '/exportaciones',

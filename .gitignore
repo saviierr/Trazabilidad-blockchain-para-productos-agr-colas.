@@ -25,6 +25,9 @@ blockchain/network/channel-artifacts/
 # Prisma
 backend/prisma/migrations/dev.db
 
+# Archivos subidos por los usuarios (WP-12) — no son código fuente
+backend/uploads/
+
 # Logs
 npm-debug.log*
 yarn-debug.log*

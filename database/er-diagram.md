@@ -122,6 +122,27 @@ erDiagram
         datetime createdAt
     }
 
+    TRANSPORTE {
+        string id PK
+        string loteId FK "UK, 1:1, WP-13"
+        string transportistaId FK
+        string ruta
+        datetime fechaSalida
+        datetime fechaLlegadaEstimada "nullable"
+        datetime fechaLlegadaReal "nullable, al marcar ENTREGADO"
+        string estado "enum EstadoTransporte, WP-13"
+        datetime createdAt
+        datetime updatedAt
+    }
+
+    INCIDENCIA {
+        string id PK
+        string transporteId FK "WP-13"
+        string descripcion
+        datetime fecha
+        datetime createdAt
+    }
+
     EXPORTACION {
         string id PK
         string loteId FK "UK, 1:1"
@@ -164,6 +185,9 @@ erDiagram
     LOTE ||--o| EXPORTACION : "concluye_en"
     CERTIFICADORA ||--o{ CERTIFICADO : "emite"
     EXPORTADOR ||--o{ EXPORTACION : "realiza"
+    LOTE ||--o| TRANSPORTE : "se_traslada_en"
+    TRANSPORTISTA ||--o{ TRANSPORTE : "ejecuta"
+    TRANSPORTE ||--o{ INCIDENCIA : "registra"
 ```
 
 ---
@@ -183,6 +207,8 @@ erDiagram
 | **Lotes** | Unidad central de trazabilidad; proyección de lectura del estado on-chain (§4). |
 | **Eventos** | Historial de hitos de cada lote; proyección de lectura del array `historialEventos` on-chain (§4). |
 | **Certificados** | Metadatos y archivo del certificado emitido para un lote. |
+| **Transportes** | Traslado de un lote (transportista, ruta, fechas, estado); no estaba en las 13 entidades mínimas de WP-01 — se agregó en WP-13 porque C5/DoD exigen un estado propio actualizable e historial de incidencias. |
+| **Incidencias** | Registro de novedades durante un traslado; no cambian por sí solas el estado del `Transporte` (WP-13). |
 | **Exportaciones** | Cierre del ciclo de vida de un lote (estado `Exportado` de C1). |
 | **Auditoría** | Bitácora de mutaciones a nivel de API/sistema (login, CRUD administrativo) — **no** es el historial de blockchain, que ya vive en Eventos/Lotes. |
 
@@ -204,6 +230,9 @@ erDiagram
 | Organización → Evento | 1:N (opcional) | Organización a la que pertenece el actor al momento del evento. |
 | Lote → Certificado | 1:N | Permite recertificaciones sin perder historial. |
 | Certificadora → Certificado | 1:N | — |
+| Lote → Transporte | 1:1 (opcional) | Un transporte activo por lote en este MVP (WP-13); reintentos/legs múltiples quedan fuera de alcance. |
+| Transportista → Transporte | 1:N | — |
+| Transporte → Incidencia | 1:N | — |
 | Lote → Exportación | 1:1 (opcional) | Solo existe una vez que el lote llega a estado `Exportado`. |
 | Exportador → Exportación | 1:N | — |
 | Usuario → Auditoría | 1:N (opcional) | Eventos de sistema sin usuario autenticado (ej. intento de login fallido) quedan con `usuarioId = null`. |

@@ -1,9 +1,9 @@
 import { Global, Module } from '@nestjs/common';
-import { CooperativaContextService } from './cooperativa-context.service';
+import { OrganizacionContextService } from './organizacion-context.service';
 
 @Global()
 @Module({
-  providers: [CooperativaContextService],
-  exports: [CooperativaContextService],
+  providers: [OrganizacionContextService],
+  exports: [OrganizacionContextService],
 })
 export class CommonModule {}

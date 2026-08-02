@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { EstadoLote, Prisma, TipoEvento } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
-import { CooperativaContextService } from '../common/cooperativa-context.service';
+import { OrganizacionContextService } from '../common/organizacion-context.service';
 import type { AuthenticatedUser } from '../auth/types/authenticated-user';
 import type { RecepcionLoteDto } from './dto/recepcion-lote.dto';
 import type { FermentacionLoteDto } from './dto/fermentacion-lote.dto';
@@ -20,7 +20,7 @@ export const INCLUDE_LOTE = {
 export class CooperativasService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly cooperativaContext: CooperativaContextService,
+    private readonly organizacionContext: OrganizacionContextService,
   ) {}
 
   // C7: "Crear lote" — solo Cooperativa, y solo sobre sus propios productores.
@@ -28,7 +28,7 @@ export class CooperativasService {
   // POST /lotes que había dejado WP-04 (ver docs/WP-11-plan-modulo-cooperativas.md §2.1).
   async recepcion(dto: RecepcionLoteDto, user: AuthenticatedUser) {
     const cooperativaId =
-      await this.cooperativaContext.resolveCooperativaId(user);
+      await this.organizacionContext.resolveCooperativaId(user);
 
     const productor = await this.prisma.productor.findUnique({
       where: { id: dto.productorId },
@@ -71,7 +71,7 @@ export class CooperativasService {
   // la transición de estado C1 (Creado → Fermentando).
   async registrarFermentacion(dto: FermentacionLoteDto, user: AuthenticatedUser) {
     const cooperativaId =
-      await this.cooperativaContext.resolveCooperativaId(user);
+      await this.organizacionContext.resolveCooperativaId(user);
 
     const lote = await this.prisma.lote.findUnique({
       where: { id: dto.loteId },

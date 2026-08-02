@@ -4,7 +4,9 @@
  *   cooperativa@test.com    Cooperativa123!
  *   cooperativa2@test.com   Cooperativa2123!   
  *   certificadora@test.com  Certificadora123!
+ *   certificadora2@test.com Certificadora2123!  (segunda certificadora, para probar aislamiento "solo propio" en WP-12)
  *   transportista@test.com  Transportista123!
+ *   transportista2@test.com Transportista2123!  (segunda transportista, para probar aislamiento "solo propio" en WP-13)
  *   exportador@test.com     Exportador123!
  *   comprador@test.com      Comprador123!
  */
@@ -84,6 +86,22 @@ async function main() {
     create: { organizacionId: certificadoraOrg.id },
   });
 
+  const certificadora2Org = await prisma.organizacion.upsert({
+    where: { mspId: 'certificadora2-demo-msp' },
+    update: {},
+    create: {
+      nombre: 'Certificadora Demo 2',
+      tipo: TipoOrganizacion.CERTIFICADORA,
+      mspId: 'certificadora2-demo-msp',
+      esValidadorRed: true,
+    },
+  });
+  await prisma.certificadora.upsert({
+    where: { organizacionId: certificadora2Org.id },
+    update: {},
+    create: { organizacionId: certificadora2Org.id },
+  });
+
   const transportistaOrg = await prisma.organizacion.upsert({
     where: { mspId: 'transportista-demo-msp' },
     update: {},
@@ -98,6 +116,22 @@ async function main() {
     where: { organizacionId: transportistaOrg.id },
     update: {},
     create: { organizacionId: transportistaOrg.id },
+  });
+
+  const transportista2Org = await prisma.organizacion.upsert({
+    where: { mspId: 'transportista2-demo-msp' },
+    update: {},
+    create: {
+      nombre: 'Transportista Demo 2',
+      tipo: TipoOrganizacion.TRANSPORTISTA,
+      mspId: 'transportista2-demo-msp',
+      esValidadorRed: false,
+    },
+  });
+  await prisma.transportista.upsert({
+    where: { organizacionId: transportista2Org.id },
+    update: {},
+    create: { organizacionId: transportista2Org.id },
   });
 
   const exportadorOrg = await prisma.organizacion.upsert({
@@ -157,11 +191,25 @@ async function main() {
         organizacionId: certificadoraOrg.id,
       },
       {
+        email: 'certificadora2@test.com',
+        password: 'Certificadora2123!',
+        nombre: 'Certificadora 2 de prueba',
+        rol: RolNombre.CERTIFICADORA,
+        organizacionId: certificadora2Org.id,
+      },
+      {
         email: 'transportista@test.com',
         password: 'Transportista123!',
         nombre: 'Transportista de prueba',
         rol: RolNombre.TRANSPORTISTA,
         organizacionId: transportistaOrg.id,
+      },
+      {
+        email: 'transportista2@test.com',
+        password: 'Transportista2123!',
+        nombre: 'Transportista 2 de prueba',
+        rol: RolNombre.TRANSPORTISTA,
+        organizacionId: transportista2Org.id,
       },
       {
         email: 'exportador@test.com',

@@ -1,8 +1,9 @@
 import { Module } from '@nestjs/common';
 import { TransportistasController } from './transportistas.controller';
+import { TransportesService } from './transportes.service';
 
-// Guards de rol en WP-04. Registro de transporte/incidencias en WP-13.
 @Module({
   controllers: [TransportistasController],
+  providers: [TransportesService],
 })
 export class TransportistasModule {}

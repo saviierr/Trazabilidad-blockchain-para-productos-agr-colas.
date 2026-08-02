@@ -56,6 +56,11 @@ enum EstadoCertificado {
   REVOCADO
 }
 
+enum EstadoTransporte {
+  EN_RUTA
+  ENTREGADO
+}
+
 enum AccionAuditoria {
   CREATE
   UPDATE
@@ -152,6 +157,8 @@ model Transportista {
   tipoVehiculo   String?
   placa          String?
 
+  transportes Transporte[]
+
   @@map("transportistas")
 }
 
@@ -220,6 +227,7 @@ model Lote {
 
   eventos      Evento[]
   certificados Certificado[]
+  transporte   Transporte?
   exportacion  Exportacion?
 
   @@map("lotes")
@@ -266,6 +274,48 @@ model Certificado {
   createdAt DateTime @default(now())
 
   @@map("certificados")
+}
+
+// No estaba en las 13 entidades mínimas de WP-01: se agrega en WP-13 porque C5
+// expone dos endpoints propios (POST /transporte, PUT /transporte/:id/estado) y
+// el DoD exige un estado actualizable + historial de incidencias — no alcanza
+// con una fecha suelta en Lote. Un transporte activo por lote (MVP), ver
+// docs/WP-13-plan-modulo-transportistas.md §2.
+model Transporte {
+  id     String @id @default(uuid())
+  loteId String @unique
+  lote   Lote   @relation(fields: [loteId], references: [id])
+
+  transportistaId String
+  transportista   Transportista @relation(fields: [transportistaId], references: [id])
+
+  ruta                 String
+  fechaSalida          DateTime
+  fechaLlegadaEstimada DateTime?
+  fechaLlegadaReal     DateTime? // se llena al marcar ENTREGADO
+  estado               EstadoTransporte @default(EN_RUTA)
+
+  incidencias Incidencia[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("transportes")
+}
+
+// Incidencias durante el traslado — no cambian el estado del Transporte por sí
+// solas (ver §3 del plan de WP-13).
+model Incidencia {
+  id           String     @id @default(uuid())
+  transporteId String
+  transporte   Transporte @relation(fields: [transporteId], references: [id])
+
+  descripcion String
+  fecha       DateTime @default(now())
+
+  createdAt DateTime @default(now())
+
+  @@map("incidencias")
 }
 
 model Exportacion {

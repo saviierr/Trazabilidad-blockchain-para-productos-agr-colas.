@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma, RolNombre } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
-import { CooperativaContextService } from '../common/cooperativa-context.service';
+import { OrganizacionContextService } from '../common/organizacion-context.service';
 import { INCLUDE_LOTE } from '../cooperativas/cooperativas.service';
 import type { AuthenticatedUser } from '../auth/types/authenticated-user';
 
@@ -9,7 +9,7 @@ import type { AuthenticatedUser } from '../auth/types/authenticated-user';
 export class LotesService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly cooperativaContext: CooperativaContextService,
+    private readonly organizacionContext: OrganizacionContextService,
   ) {}
 
   // "Solo propio" real para Cooperativa/Productor (C7). Certificadora/
@@ -21,7 +21,7 @@ export class LotesService {
 
     if (user.rol === RolNombre.COOPERATIVA) {
       where.cooperativaId =
-        await this.cooperativaContext.resolveCooperativaId(user);
+        await this.organizacionContext.resolveCooperativaId(user);
     } else if (user.rol === RolNombre.PRODUCTOR) {
       where.productor = { usuarioId: user.id };
     }
